@@ -1,0 +1,71 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha1
+kind: Terraform
+metadata:
+  name: nonprod-bdx-bcp-test
+  namespace: nonprod
+spec:
+  runnerPodTemplate:
+    metadata:
+      annotations:
+        microcumul.us/injectssl: absa-crt
+    spec:
+      envFrom:
+        - configMapRef:
+            name: proxy-settings
+  path: ./downstream-eks
+  approvePlan: "auto"
+  interval: 10m0s
+  destroyResourcesOnDeletion: true
+  workspace: nonprod-bdx-bcp-test
+  backendConfig:
+    customConfiguration: "backend \"s3\"{}"
+  backendConfigsFrom:
+  - kind: ConfigMap
+    name: nonprod-backend
+  varsFrom:
+  - kind: ConfigMap
+    name: global-vars
+  vars:
+  - name: eks_kubernetes_version
+    value: "1.23"
+  - name: eks_desired_node_size
+    value: 0
+  - name: eks_min_node_size
+    value: 0
+  - name: eks_max_node_size
+    value: 5
+  - name: eks_instance_types
+    value: [t3.large]
+  - name: eks_enable_fargate_profile
+    value: false
+  - name: eks_capacity_type
+    value: "ON_DEMAND"
+  - name: eks_cluster_name
+    value: bcp-test
+  - name: aws_account_id
+    value: 130403602956
+  - name: aws_account_teamcode
+    value: bdx
+  - name: aws_account_alias
+    value: npintbdx
+  - name: aws_account_env
+    value: dev
+  - name: vpc_id
+    value: vpc-00eb32ffcda976bfd
+  - name: teamemail_label
+    value: backstageproduct@absa.africa
+  - name: costcenter_label
+    value: SA600364
+  - name: appid_label
+    value: BSN0015284
+  - name: cluster_custom_labels
+    value:
+      bdx.subatomic.absa.clusterName: bcp-test
+      bdx.subatomic.absa.clusterEnv: nonprod
+      bdx.subatomic.absa.owningGroup: backstageproduct-PROD-ZA-Users
+  - name: team_ad_group_name
+    value: [backstageproduct-PROD-ZA-Users]
+  sourceRef:
+    kind: GitRepository
+    name: rancher-main
+    namespace: tf-ctrl
